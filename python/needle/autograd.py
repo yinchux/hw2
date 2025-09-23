@@ -1,7 +1,7 @@
 """Core data structures."""
 import needle
 from .backend_numpy import Device, cpu, all_devices
-from typing import List, Optional, NamedTuple, Tuple, Union
+from typing import List, Optional, NamedTuple, Tuple, Union, Dict
 from collections import namedtuple
 import numpy
 
@@ -304,7 +304,7 @@ class Tensor(Value):
     def numpy(self):
         data = self.realize_cached_data()
         if array_api is numpy:
-            return data
+            return numpy.array(data)
         return data.numpy()
 
     def __add__(self, other):
