@@ -1,7 +1,7 @@
 """Core data structures."""
 import needle
 from .backend_numpy import Device, cpu, all_devices
-from typing import List, Optional, NamedTuple, Tuple, Union, Dict
+from typing import List, Optional, NamedTuple, Tuple, Union
 from collections import namedtuple
 import numpy
 
@@ -358,9 +358,9 @@ class Tensor(Value):
     def transpose(self, axes=None):
         return needle.ops.Transpose(axes)(self)
 
-
     __radd__ = __add__
     __rmul__ = __mul__
+
 
 
 
@@ -380,7 +380,18 @@ def compute_gradient_of_variables(output_tensor, out_grad):
     reverse_topo_order = list(reversed(find_topo_sort([output_tensor])))
 
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    for node in reverse_topo_order:
+        if node in node_to_output_grads_list:
+            out_grads = sum_node_list(node_to_output_grads_list[node])
+            if node.is_leaf():
+                node.grad = out_grads
+            else:
+                in_grads = node.op.gradient_as_tuple(out_grads, node)
+                for i, n in enumerate(node.inputs):
+                    if n not in node_to_output_grads_list:
+                        node_to_output_grads_list[n] = []
+                    node_to_output_grads_list[n].append(in_grads[i])
+        
     ### END YOUR SOLUTION
 
 
@@ -393,14 +404,23 @@ def find_topo_sort(node_list: List[Value]) -> List[Value]:
     sort.
     """
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    visited = set()
+    topo_order = []
+    for node in node_list:
+        if node not in visited:
+            topo_sort_dfs(node, visited, topo_order)
+    return topo_order
     ### END YOUR SOLUTION
 
 
 def topo_sort_dfs(node, visited, topo_order):
     """Post-order DFS"""
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    visited.add(node)
+    for n in node.inputs:
+        if n not in visited:
+            topo_sort_dfs(n, visited, topo_order)
+    topo_order.append(node) 
     ### END YOUR SOLUTION
 
 
