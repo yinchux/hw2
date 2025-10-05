@@ -60,12 +60,34 @@ class DataLoader:
 
     def __iter__(self):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.current_batch = 0
+        if self.shuffle:
+            indices = np.arange(len(self.dataset))
+            np.random.shuffle(indices)
+            self.ordering = np.array_split(indices, range(self.batch_size, len(self.dataset), self.batch_size))
         ### END YOUR SOLUTION
         return self
 
     def __next__(self):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if self.current_batch >= len(self.ordering):
+            raise StopIteration
+        batch_indices = self.ordering[self.current_batch]
+        self.current_batch += 1
+        batch_data = [self.dataset[i] for i in batch_indices]
+        
+        # Handle both tuple and single value returns
+        # Transpose the batch_data to get separate arrays for each field
+        if isinstance(batch_data[0], tuple):
+            # Dataset returns tuples (e.g., (image, label) or (data1, data2, ...))
+            transposed = list(zip(*batch_data))
+            # Stack/convert each field and wrap in Tensor
+            result = tuple(Tensor(np.stack(field) if isinstance(field[0], np.ndarray) and field[0].ndim > 0 
+                                  else np.array(field)) 
+                          for field in transposed)
+            return result
+        else:
+            # Dataset returns single values
+            return (Tensor(np.stack(batch_data)),)
         ### END YOUR SOLUTION
 
